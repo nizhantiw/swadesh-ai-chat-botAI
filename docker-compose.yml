@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+  # ─── PostgreSQL Database ─────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: swadesh-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: swadesh_ai_chat
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend (Hono) ─────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: swadesh-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/swadesh_ai_chat
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      PORT: "3000"
+      NODE_ENV: production
+    # Seed the database on first run, then start the server
+    command: >
+      sh -c "
+        npx drizzle-kit push &&
+        npx tsx src/db/seed.ts &&
+        node dist/index.js
+      "
+
+  # ─── Frontend (Nginx serving Vite build) ─────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    container_name: swadesh-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:

@@ -1,0 +1,492 @@
+{
+  "info": {
+    "name": "Swadesh AI Chat",
+    "description": "Multi-Agent AI Customer Support System API.\n\nSetup:\n1. Set the `base_url` variable (default: http://localhost:3000)\n2. Run the seed script first: `cd apps/backend && npm run db:seed`\n3. Copy a seeded user ID into the `user_id` variable\n4. Start the backend: `npm run dev`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "{{user_id}}",
+      "type": "string",
+      "description": "UUID of a seeded user. Run seed first, then paste a user ID here."
+    },
+    {
+      "key": "conversation_id",
+      "value": "{{conversation_id}}",
+      "type": "string",
+      "description": "Set automatically after sending a message, or paste an existing conversation ID."
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "health"]
+            },
+            "description": "Verify the backend is running and responsive."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status is ok', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Agents",
+      "item": [
+        {
+          "name": "List All Agents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/agents",
+              "host": ["{{base_url}}"],
+              "path": ["api", "agents"]
+            },
+            "description": "Returns all registered agents (router, support, order, billing) with their capabilities."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns agent array', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "  pm.expect(json.data.length).to.be.greaterThan(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Support Agent Capabilities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/agents/support/capabilities",
+              "host": ["{{base_url}}"],
+              "path": ["api", "agents", "support", "capabilities"]
+            },
+            "description": "Returns capabilities of the Support Agent."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns capabilities', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Order Agent Capabilities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/agents/order/capabilities",
+              "host": ["{{base_url}}"],
+              "path": ["api", "agents", "order", "capabilities"]
+            },
+            "description": "Returns capabilities of the Order Agent."
+          }
+        },
+        {
+          "name": "Get Billing Agent Capabilities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/agents/billing/capabilities",
+              "host": ["{{base_url}}"],
+              "path": ["api", "agents", "billing", "capabilities"]
+            },
+            "description": "Returns capabilities of the Billing Agent."
+          }
+        },
+        {
+          "name": "Get Router Agent Capabilities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/agents/router/capabilities",
+              "host": ["{{base_url}}"],
+              "path": ["api", "agents", "router", "capabilities"]
+            },
+            "description": "Returns capabilities of the Router Agent."
+          }
+        },
+        {
+          "name": "Invalid Agent Type (Error Test)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/agents/invalid/capabilities",
+              "host": ["{{base_url}}"],
+              "path": ["api", "agents", "invalid", "capabilities"]
+            },
+            "description": "Tests error handling for invalid agent type. Expects 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Returns error', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.error.code).to.eql('VALIDATION_ERROR');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Send Message — New Conversation (Order Query)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"content\": \"Where is my order ORD-2024-002?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "messages"]
+            },
+            "description": "Sends a new message without a conversationId — creates a new conversation.\n\nThe response is an SSE stream. Postman will show the raw stream events:\n- `event: message_start` — contains the new conversationId\n- `event: agent_typing` — typing indicator\n- `event: message_complete` — the AI agent's response\n\nCopy the conversationId from the message_start event to use in follow-up requests."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "// Try to extract conversationId from SSE stream",
+                  "const body = pm.response.text();",
+                  "const match = body.match(/\"conversationId\":\\s*\"([^\"]+)\"/);",
+                  "if (match) {",
+                  "  pm.collectionVariables.set('conversation_id', match[1]);",
+                  "  console.log('Set conversation_id:', match[1]);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send Message — Existing Conversation (Follow-up)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"conversationId\": \"{{conversation_id}}\",\n  \"content\": \"What is the tracking number for that order?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "messages"]
+            },
+            "description": "Sends a follow-up message in an existing conversation. Uses the conversation_id variable set by the previous request.\n\nDemonstrates context persistence — the agent remembers the previous order query."
+          }
+        },
+        {
+          "name": "Send Message — Billing Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"content\": \"I need a refund for my defective product\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "messages"]
+            },
+            "description": "Tests routing to the Billing Agent for a refund-related query."
+          }
+        },
+        {
+          "name": "Send Message — Support Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"content\": \"How do I reset my password?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "messages"]
+            },
+            "description": "Tests routing to the Support Agent for a general support query."
+          }
+        },
+        {
+          "name": "Send Message — Invalid Body (Error Test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "messages"]
+            },
+            "description": "Tests validation — missing userId and empty content should return 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Returns validation error', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.error.code).to.eql('VALIDATION_ERROR');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List User Conversations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/chat/conversations?userId={{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "conversations"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{user_id}}"
+                }
+              ]
+            },
+            "description": "Returns all conversations for the given user, sorted by most recent."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns array', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "// Set conversation_id from first result if available",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.length > 0) {",
+                  "  pm.collectionVariables.set('conversation_id', json.data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Conversations — Missing userId (Error Test)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/chat/conversations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "conversations"]
+            },
+            "description": "Tests validation — missing userId query param should return 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Returns validation error', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.error.code).to.eql('VALIDATION_ERROR');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Conversation by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/chat/conversations/{{conversation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "conversations", "{{conversation_id}}"]
+            },
+            "description": "Returns the full conversation including all messages, sorted chronologically."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has messages', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('messages');",
+                  "  pm.expect(json.data.messages).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Conversation — Not Found (Error Test)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/chat/conversations/00000000-0000-0000-0000-000000000000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "conversations", "00000000-0000-0000-0000-000000000000"]
+            },
+            "description": "Tests 404 handling for a non-existent conversation."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Returns not found error', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.error.code).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Conversation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/chat/conversations/{{conversation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "conversations", "{{conversation_id}}"]
+            },
+            "description": "Deletes a conversation and all its messages (cascading)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Confirms deletion', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.message).to.eql('Conversation deleted');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

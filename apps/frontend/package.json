@@ -1,0 +1,26 @@
+{
+  "name": "@swadesh/frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@swadesh/shared": "*",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.3",
+    "autoprefixer": "^10.4",
+    "postcss": "^8.4",
+    "tailwindcss": "^4",
+    "@tailwindcss/vite": "^4",
+    "typescript": "^5.7",
+    "vite": "^6"
+  }
+}
