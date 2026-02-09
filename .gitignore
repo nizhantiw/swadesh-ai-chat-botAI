@@ -8,4 +8,6 @@ build/
 *.tmp
 .idea/
 .vscode/
+.turbo/
 coverage/
+.turbo/cookies/1.cookie
