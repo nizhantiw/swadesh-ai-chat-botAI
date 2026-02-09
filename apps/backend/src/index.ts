@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
@@ -7,6 +8,7 @@ import { errorHandler } from "./middleware/error-handler.js";
 import { chatRoutes } from "./routes/chat.routes.js";
 import { agentRoutes } from "./routes/agent.routes.js";
 import { healthRoutes } from "./routes/health.routes.js";
+import { userRoutes } from "./routes/user.routes.js";
 
 // ─── App Definition (chained for RPC type inference) ───────────────────────
 
@@ -20,7 +22,8 @@ const app = new Hono()
   .use("/api/*", rateLimiter({ windowMs: 60_000, max: 100 }))
   .route("/api/chat", chatRoutes)
   .route("/api/agents", agentRoutes)
-  .route("/api/health", healthRoutes);
+  .route("/api/health", healthRoutes)
+  .route("/api/users", userRoutes);
 
 // ─── Global Error Handler ──────────────────────────────────────────────────
 
