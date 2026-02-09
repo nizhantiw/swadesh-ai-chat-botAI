@@ -9,7 +9,13 @@ import { ConversationList } from "./components/ConversationList.js";
  * This userId should match a seeded user.
  * In production, this would come from authentication.
  */
-const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+const DEFAULT_USER_ID = "efdb5692-26bf-4f80-99ea-abec43c55864";
+
+const SEEDED_USERS = [
+  { id: "efdb5692-26bf-4f80-99ea-abec43c55864", name: "Alice Johnson" },
+  { id: "f5736b96-f4bb-4647-90e0-4649dca71ff3", name: "Bob Smith" },
+  { id: "01c9d036-3a6d-4263-b12a-2a692e9049c0", name: "Carol Williams" },
+];
 
 function App() {
   const [userId, setUserId] = useState(DEFAULT_USER_ID);
@@ -62,16 +68,30 @@ function App() {
             refreshKey={refreshKey}
           />
           {/* User ID input for demo */}
-          <div className="p-3 border-t border-gray-200">
-            <label className="text-xs text-gray-500 block mb-1">
-              User ID (for demo)
+          <div className="p-3 border-t border-gray-200 space-y-2">
+            <label className="text-xs font-medium text-gray-500 block">
+              Switch User (demo)
             </label>
+            <select
+              value={userId}
+              onChange={(e) => {
+                setUserId(e.target.value);
+                startNewConversation();
+              }}
+              className="w-full text-xs rounded border border-gray-300 px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              {SEEDED_USERS.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
             <input
               type="text"
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
-              className="w-full text-xs rounded border border-gray-300 px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="Enter user UUID"
+              className="w-full text-[10px] font-mono rounded border border-gray-300 px-2 py-1.5 text-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="Or paste UUID manually"
             />
           </div>
         </aside>
