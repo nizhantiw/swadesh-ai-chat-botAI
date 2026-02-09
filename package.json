@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
+    "start": "cd apps/backend && node dist/index.js",
     "db:generate": "turbo db:generate",
     "db:push": "turbo db:push",
     "db:seed": "turbo db:seed",
