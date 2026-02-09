@@ -32,13 +32,19 @@ async function seed() {
   console.log("  ✓ Cleaned existing data");
 
   // ─── Users ────────────────────────────────────────────────────────────────
+  // Use fixed UUIDs that match the frontend's hardcoded user selector
+  const FIXED_USER_IDS = {
+    alice: "efdb5692-26bf-4f80-99ea-abec43c55864",
+    bob: "f5736b96-f4bb-4647-90e0-4649dca71ff3",
+    carol: "01c9d036-3a6d-4263-b12a-2a692e9049c0",
+  };
 
   const [user1, user2, user3] = await db
     .insert(users)
     .values([
-      { email: "alice@example.com", name: "Alice Johnson" },
-      { email: "bob@example.com", name: "Bob Smith" },
-      { email: "carol@example.com", name: "Carol Williams" },
+      { id: FIXED_USER_IDS.alice, email: "alice@example.com", name: "Alice Johnson" },
+      { id: FIXED_USER_IDS.bob, email: "bob@example.com", name: "Bob Smith" },
+      { id: FIXED_USER_IDS.carol, email: "carol@example.com", name: "Carol Williams" },
     ])
     .returning();
 

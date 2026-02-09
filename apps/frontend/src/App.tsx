@@ -1,27 +1,26 @@
 import { useState, useEffect, useRef } from "react";
 import { useChat } from "./hooks/useChat.js";
+import { useUsers } from "./hooks/useUsers.js";
 import { ChatInput } from "./components/ChatInput.js";
 import { MessageBubble } from "./components/MessageBubble.js";
 import { TypingIndicator } from "./components/TypingIndicator.js";
 import { ConversationList } from "./components/ConversationList.js";
 
-/**
- * This userId should match a seeded user.
- * In production, this would come from authentication.
- */
-const DEFAULT_USER_ID = "efdb5692-26bf-4f80-99ea-abec43c55864";
-
-const SEEDED_USERS = [
-  { id: "efdb5692-26bf-4f80-99ea-abec43c55864", name: "Alice Johnson" },
-  { id: "f5736b96-f4bb-4647-90e0-4649dca71ff3", name: "Bob Smith" },
-  { id: "01c9d036-3a6d-4263-b12a-2a692e9049c0", name: "Carol Williams" },
-];
-
 function App() {
-  const [userId, setUserId] = useState(DEFAULT_USER_ID);
+  // Fetch users dynamically from the backend
+  const { users, isLoading: usersLoading, error: usersError } = useUsers();
+
+  const [userId, setUserId] = useState<string>("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Set default user when users are loaded
+  useEffect(() => {
+    if (users.length > 0 && !userId) {
+      setUserId(users[0].id);
+    }
+  }, [users, userId]);
 
   const {
     messages,
@@ -72,20 +71,26 @@ function App() {
             <label className="text-xs font-medium text-gray-500 block">
               Switch User (demo)
             </label>
-            <select
-              value={userId}
-              onChange={(e) => {
-                setUserId(e.target.value);
-                startNewConversation();
-              }}
-              className="w-full text-xs rounded border border-gray-300 px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              {SEEDED_USERS.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
+            {usersLoading ? (
+              <div className="text-xs text-gray-400">Loading users...</div>
+            ) : usersError ? (
+              <div className="text-xs text-red-500">{usersError}</div>
+            ) : (
+              <select
+                value={userId}
+                onChange={(e) => {
+                  setUserId(e.target.value);
+                  startNewConversation();
+                }}
+                className="w-full text-xs rounded border border-gray-300 px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            )}
             <input
               type="text"
               value={userId}
