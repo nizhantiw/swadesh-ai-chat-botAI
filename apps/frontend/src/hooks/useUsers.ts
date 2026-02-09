@@ -6,7 +6,7 @@ export interface User {
     email: string;
 }
 
-const API_BASE = "http://localhost:3000";
+const API_BASE = "/api";
 
 /**
  * Hook to fetch and manage users from the backend.
@@ -23,7 +23,7 @@ export function useUsers() {
                 setIsLoading(true);
                 setError(null);
 
-                const response = await fetch(`${API_BASE}/api/users`);
+                const response = await fetch(`${API_BASE}/users`);
 
                 if (!response.ok) {
                     throw new Error("Failed to fetch users");
